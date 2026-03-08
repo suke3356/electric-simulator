@@ -240,6 +240,64 @@ with col_tr4:
     st.metric("一次電流 I1", f"{I1:.4f}")
 
 # -------------------------
+# スター / デルタ結線
+# -------------------------
+
+st.divider()
+st.header("スター結線 / デルタ結線")
+
+connection = st.selectbox(
+    "結線方式",
+    ["スター結線 (Y)", "デルタ結線 (Δ)"]
+)
+
+col_y1, col_y2 = st.columns(2)
+
+with col_y1:
+    V_phase = st.number_input("相電圧 V_phase (V)", value=100.0)
+    
+with col_y2:
+    I_phase = st.number_input("相電流 I_phase (A)", value=10.0)
+
+if connection == "スター結線 (Y)":
+
+    V_line = np.sqrt(3) * V_phase
+    I_line = I_phase
+
+    st.subheader("スター結線結果")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric("線間電圧 V_L", f"{V_line:.2f} V")
+
+    with col2:
+        st.metric("線電流 I_L", f"{I_line:.2f} A")
+
+    st.write("関係式")
+    st.write("V_L = √3 × V_Ph")
+    st.write("I_L = I_Ph")
+
+else:
+
+    V_line = V_phase
+    I_line = np.sqrt(3) * I_phase
+
+    st.subheader("デルタ結線結果")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric("線間電圧 V_L", f"{V_line:.2f} V")
+
+    with col2:
+        st.metric("線電流 I_L", f"{I_line:.2f} A")
+
+    st.write("関係式")
+    st.write("V_L = V_Ph")
+    st.write("I_L = √3 × I_Ph")
+
+# -------------------------
 # 単線結線図エンジン（試作）
 # -------------------------
 
@@ -277,3 +335,42 @@ with col2:
 
 with col3:
     st.metric("負荷2", "活線" if load2_live else "非活線")
+
+# -------------------------
+# BUSネットワーク（変電所エンジン試作）
+# -------------------------
+
+st.divider()
+st.header("BUSネットワークシミュレータ")
+
+st.write("構成 : BUS1 → CB → BUS2 → LOAD")
+
+# スイッチ状態
+source_on = st.checkbox("電源 BUS1 ON", value=True)
+cb_closed = st.checkbox("遮断器 CB CLOSED", value=True)
+
+# BUS状態計算
+bus1_live = source_on
+bus2_live = bus1_live and cb_closed
+load_live = bus2_live
+
+st.subheader("設備状態")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("BUS1", "活線" if bus1_live else "非活線")
+
+with col2:
+    st.metric("BUS2", "活線" if bus2_live else "非活線")
+
+with col3:
+    st.metric("LOAD", "活線" if load_live else "非活線")
+
+st.write("状態ロジック")
+
+st.code("""
+BUS1 = 電源
+BUS2 = BUS1 and CB
+LOAD = BUS2
+""")
